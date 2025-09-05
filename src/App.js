@@ -32,6 +32,13 @@ function App() {
     }
   }, [cartItems]);
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
   const addToCart = () => {
     if (!selectedService || quantity <= 0) return;
     
@@ -39,12 +46,13 @@ function App() {
     const existingItem = cartItems.find(item => item.serviceId === selectedService);
     
     if (existingItem) {
+      const newQuantity = existingItem.quantity + parseInt(quantity);
       const updatedItems = cartItems.map(item => 
         item.serviceId === selectedService 
           ? { 
               ...item, 
-              quantity: item.quantity + parseInt(quantity),
-              lineTotal: (item.unitPrice * (item.quantity + parseInt(quantity)))
+              quantity: newQuantity,
+              lineTotal: (item.unitPrice * newQuantity)
             } 
           : item
       );
@@ -79,7 +87,7 @@ function App() {
       <div className="service-list">
         <h2>Select Service</h2>
         <div className="service-controls">
-          <select onChange={(e) => setSelectedService(e.target.value)}>
+          <select value={selectedService} onChange={(e) => setSelectedService(e.target.value)}>
             <option value="">Select a service</option>
             {services.map((service) => (
               <option key={service.id} value={service.id}>
@@ -95,10 +103,9 @@ function App() {
             min="1"
           />
           <span>
-            Unit Price: $
-            {services
-              .find((service) => service.id === selectedService)
-              ?.unitPrice.toFixed(2) || '0.00'}
+            Unit Price: {formatCurrency(
+              services.find((service) => service.id === selectedService)?.unitPrice || 0
+            )}
           </span>
           <button onClick={addToCart}>Add to Cart</button>
         </div>
@@ -112,7 +119,7 @@ function App() {
           <div>
             {cartItems.map((item) => (
               <div key={item.id} className="cart-item">
-                <span>{item.service} - Qty: {item.quantity} - ${item.unitPrice.toFixed(2)} - Total: ${item.lineTotal.toFixed(2)}</span>
+                <span>{item.service} - Qty: {item.quantity} - Unit: {formatCurrency(item.unitPrice)} - Total: {formatCurrency(item.lineTotal)}</span>
                 <button onClick={() => removeFromCart(item.id)}>Remove</button>
               </div>
             ))}
@@ -123,9 +130,9 @@ function App() {
       
       <div className="invoice-total">
         <h2>Invoice Total</h2>
-        <p>Subtotal: ${cartItems.reduce((total, item) => total + item.lineTotal, 0).toFixed(2)}</p>
-        <p>Tax (8%): ${(cartItems.reduce((total, item) => total + item.lineTotal, 0) * 0.08).toFixed(2)}</p>
-        <p><strong>Total: ${(cartItems.reduce((total, item) => total + item.lineTotal, 0) * 1.08).toFixed(2)}</strong></p>
+        <p>Subtotal: {formatCurrency(cartItems.reduce((total, item) => total + item.lineTotal, 0))}</p>
+        <p>Tax (8%): {formatCurrency(cartItems.reduce((total, item) => total + item.lineTotal, 0) * 0.08)}</p>
+        <p>Total: {formatCurrency(cartItems.reduce((total, item) => total + item.lineTotal, 0) * 1.08)}</p>
       </div>
     </div>
   );
